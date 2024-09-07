@@ -3,39 +3,38 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String[] args) {
-        Counter counter = new Counter();
-
-        Thread thread1 = new Thread(new Runnable() {
+        Thread client1 = new Thread(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < 1000; i++) {
-                    counter.inc();
-                }
+                bank.getMoney("Roman", 5_000_000);
             }
         });
 
-        Thread thread2 = new Thread(new Runnable() {
+        Thread client2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < 1000; i++) {
-                    counter.dic();
-                }
+                bank.getMoney("Igor", 5_000_000);
             }
         });
 
-        thread1.start();
-        thread2.start();
+        Thread client3 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                bank.getMoney("Ivan", 5_000_000);
+            }
+        });
+
+        client1.start();
+        client2.start();
+        client3.start();
 
         try {
-            thread1.join();
-            thread2.join();
+            client3.join();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        
-        //RACE CONDITION
 
-        System.out.println(counter.getValue());
+        System.out.println(bank.getCAPITAL());
 
     }
 }
