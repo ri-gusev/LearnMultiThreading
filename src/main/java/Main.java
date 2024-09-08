@@ -1,40 +1,38 @@
-import java.util.Arrays;
-
 public class Main {
 
     public static void main(String[] args) {
-        Thread client1 = new Thread(new Runnable() {
+        Counter counter = new Counter();
+
+        Thread thread1 = new Thread(new Runnable() {
             @Override
             public void run() {
-                bank.getMoney("Roman", 5_000_000);
+                for (int i = 0; i < 1000; i++){
+                    counter.inc();
+                }
             }
         });
 
-        Thread client2 = new Thread(new Runnable() {
+        Thread thread2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                bank.getMoney("Igor", 5_000_000);
+                for (int i = 0; i < 1000; i++) {
+                    counter.dic();
+                }
             }
         });
 
-        Thread client3 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                bank.getMoney("Ivan", 5_000_000);
-            }
-        });
 
-        client1.start();
-        client2.start();
-        client3.start();
+        thread1.start();
+        thread2.start();
 
         try {
-            client3.join();
+            thread1.join();
+            thread2.join();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.println(bank.getCAPITAL());
+        System.out.println(counter.getValue1());
 
     }
 }
