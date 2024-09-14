@@ -10,9 +10,10 @@ public class Main {
     public static void main(String[] args) {
         long before = System.currentTimeMillis();
 
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
         CountDownLatch counter = new CountDownLatch(3);
 
-        Thread thread1 = new Thread(new Runnable(){
+        executorService.execute(new Runnable() {
             @Override
             public void run() {
                 int sum = 0;
@@ -26,7 +27,7 @@ public class Main {
             }
         });
 
-        Thread thread2 = new Thread(new Runnable() {
+        executorService.execute(new Runnable() {
             @Override
             public void run() {
                 int sum = 0;
@@ -40,7 +41,7 @@ public class Main {
             }
         });
 
-        Thread thread3 = new Thread(new Runnable() {
+        executorService.execute(new Runnable() {
             @Override
             public void run() {
                 List<Integer> array = new ArrayList<>(1000);
@@ -57,9 +58,8 @@ public class Main {
                 counter.countDown();
             }
         });
-        thread1.start();
-        thread2.start();
-        thread3.start();
+
+        executorService.shutdown();
 
         try {
             counter.await();
