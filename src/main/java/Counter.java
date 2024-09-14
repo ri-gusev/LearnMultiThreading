@@ -1,16 +1,18 @@
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class Counter {
 
-    private volatile int value = 0;
+    private AtomicInteger value = new AtomicInteger();
 
-    public synchronized void inc() {
-        value++;
+    public void inc() {
+        value.getAndIncrement();
     }
 
-    public synchronized void dic() {
-        value--;
+    public void dic() {
+        value.getAndDecrement();
     }
 
     public int getValue1() {
-        return value;
+        return value.intValue();
     }
 }
