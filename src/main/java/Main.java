@@ -1,73 +1,69 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        long before = System.currentTimeMillis();
-
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
-        CountDownLatch counter = new CountDownLatch(3);
-
-        executorService.execute(new Runnable() {
+        ExecutorService executorService = Executors.newFixedThreadPool(3,new ThreadFactory() {
             @Override
-            public void run() {
-                int sum = 0;
-                for (int i = 0; i<1_000_000;i++){
-                    if (i % 2 == 0){
-                        sum += i;
-                    }
-                }
-                System.out.println(sum);
-                counter.countDown();
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r);
+                thread.setDaemon(true);
+                return thread;
             }
         });
 
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                int sum = 0;
-                for (int i = 0; i<1_000_000;i++){
-                    if (i % 7 == 0){
-                        sum += i;
+                try {
+                    while (true){
+                        System.out.print(".");
+                        Thread.sleep(400);
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                System.out.println(sum);
-                counter.countDown();
+                
             }
         });
 
-        executorService.execute(new Runnable() {
+        Future<String> futureName = executorService.submit(new Callable<String>() {
             @Override
-            public void run() {
-                List<Integer> array = new ArrayList<>(1000);
-                for (int i = 0; i < 1000; i++) {
-                    array.add((int)(Math.random()*1000));
+            public String call() throws Exception {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                int c = 0;
-                for (Integer x : array){
-                    if (x % 2 == 0){
-                        c++;
-                    }
-                }
-                System.out.println(c);
-                counter.countDown();
+                return "John";
             }
         });
 
-        executorService.shutdown();
+        Future<Integer> futureAge = executorService.submit(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                try {
+                    Thread.sleep(4000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                return 18;
+            }
+        });
 
         try {
-            counter.await();
+            String name = futureName.get();
+            int age = futureAge.get();
+            System.out.println("\n" + name + " " + age);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
         }
-        long after = System.currentTimeMillis();
-        long result = after-before;
-        System.out.println(result);
+
+        
     }
 }
