@@ -1,68 +1,74 @@
-import java.util.ArrayList;
-import java.util.List;
-
-import java.util.concurrent.*;
-
 public class Main {
 
+    private static final Object MONITOR = new Object();
+    private static final String A = "A";
+    private static final String B = "B";
+    private static final String C = "C";
+    private static String nextLetter = A;
+
     public static void main(String[] args) {
-        ExecutorService executorService = Executors.newFixedThreadPool(3,new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
 
-        executorService.execute(new Runnable() {
+        new Thread(new Runnable() {
             @Override
-            public void run() {
-                try {
-                    while (true){
-                        System.out.print(".");
-                        Thread.sleep(400);
+            public void run(){
+                synchronized (MONITOR){
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            while (!nextLetter.equals(A)){
+                                MONITOR.wait();
+                            }
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        System.out.print(A);
+                        nextLetter = B;
+                        MONITOR.notifyAll();
                     }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
-                
             }
-        });
+        }).start();
 
-        Future<String> futureName = executorService.submit(new Callable<String>() {
+        new Thread(new Runnable() {
             @Override
-            public String call() throws Exception {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+            public void run(){
+                synchronized (MONITOR){
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            while (!nextLetter.equals(B)){
+                                MONITOR.wait();
+                            }
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        System.out.print(B);
+                        nextLetter = C;
+                        MONITOR.notifyAll();
+                    }
                 }
-                return "John";
             }
-        });
+        }).start();
 
-        Future<Integer> futureAge = executorService.submit(new Callable<Integer>() {
+        new Thread(new Runnable() {
             @Override
-            public Integer call() throws Exception {
-                try {
-                    Thread.sleep(4000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+            public void run(){
+                synchronized (MONITOR){
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            while (!nextLetter.equals(C)){
+                                MONITOR.wait();
+                            }
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        System.out.print(C);
+                        nextLetter = A;
+                        MONITOR.notifyAll();
+                    }
                 }
-                return 18;
             }
-        });
+        }).start();
 
-        try {
-            String name = futureName.get();
-            int age = futureAge.get();
-            System.out.println("\n" + name + " " + age);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        // expected output - ABCABCABCABCABC   (correct)
 
         
     }
